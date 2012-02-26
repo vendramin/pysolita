@@ -76,11 +76,14 @@ class Game(object):
         pygame.display.flip()
 
         self.xray_mode = False
-        self.game_over = False
+        self.message = Message()
         
     def init(self):
-        
+
+        self.looser = False
+        self.played = 0
         self.bad = 0
+
         self.mycard = None
         self.deck = Deck(False) 
         self.table = Table(self.deck)
@@ -127,8 +130,14 @@ class Game(object):
  
     def loop(self):
 
-        if self.game_over:
-            pass
+        if self.played == 13*4-4:
+            self.message.set_message('winner')
+            self.sprites.add(self.message)
+        else:
+            if self.bad==4:
+                self.looser = True
+                self.message.set_message('looser')
+                self.sprites.add(self.message)
 
         if self.mycard != None:
             if self.mycard.number == config.n:
@@ -155,11 +164,13 @@ class Game(object):
                 if event.key == K_t:
                     self.text.visible = not self.text.visible
                 if event.key == K_f:
-                    message = Message()
-                    self.sprites.add(message)
+                    self.sprites.add(self.message)
                 if event.key == K_r or event.key == K_SPACE:
                     self.mouse.set_image()
                     self.init()
+                if event.key == K_RETURN:
+                    for card in self.table.sprites():
+                        card.flip()
                 if event.key == K_x:
                     self.xray_mode = not self.xray_mode
                 if event.key == K_w:
@@ -212,6 +223,7 @@ class Game(object):
                             self.sprites.add(card)
             
                             self.mouse.set_image(self.mycard.image)
+                            self.played = self.played + 1
 
         for card in self.mycards:
             if pygame.Rect(card.rect).collidepoint(x,y) and self.mycard == None:
@@ -274,16 +286,20 @@ class Deck():
 class Message(pygame.sprite.DirtySprite):
     def __init__(self):
         super(Message, self).__init__()
-        self.image = pygame.image.load('/home/leandro/gameover.png').convert_alpha()
-        self.rect = self.image.get_rect()
-        self.rect.x = 0
-        self.rect.y = 0
-        self.dirty = 2
+        self.images = { 
+            'looser': pygame.image.load(config.path+'looser.png').convert_alpha(),
+            'winner': pygame.image.load(config.path+'winner.png').convert_alpha()
+        }
+        self.set_message()
     def set_position(self, x, y):
         self.rect.x = x
         self.rect.y = y
-    def set_message(self):
-        pass
+    def set_message(self, message='looser'):
+        self.image = self.images[message]
+        self.rect = self.image.get_rect()
+        self.rect.x = (config.w-self.rect.w)/2
+        self.rect.y = (config.h-self.rect.h)/2
+        self.dirty = 2
 
 class Card(pygame.sprite.DirtySprite):
     def __init__(self, number, suit, filename):
@@ -302,6 +318,10 @@ class Card(pygame.sprite.DirtySprite):
         self.mine = True
     def is_mine(self):
         return self.mine
+    def set_visible(self):
+        if self.hidden:
+            self.flip()
+
     def flip(self):
         self.dirty = 2
         self.hidden = not self.hidden
