@@ -42,7 +42,7 @@ class Mouse(pygame.sprite.DirtySprite):
         self.rect.center = self.get_pos()
 
 class Text(pygame.sprite.DirtySprite):
-    def __init__(self, filename=None, size=40):
+    def __init__(self, filename=None, size=28):
         super(Text, self).__init__()
         self.font = pygame.font.Font(filename, size)
         self.msg = None
@@ -58,6 +58,7 @@ class Text(pygame.sprite.DirtySprite):
     def update(self):
         if not self.msg == None: 
             self.rect = self.image.get_rect(centerx=config.w/2)
+            self.rect.y = 8
         self.image = self.font.render(self.msg, self.antialias, self.color)
 
 class Game(object):
@@ -111,6 +112,10 @@ class Game(object):
                 self.cols[y].append(card.rect)
                 self.table.add(card)
                 self.sprites.add(card)
+        
+        self.text.visible = True
+        self.text.msg = 'press SPACE to restart or ESC to quit'
+        self.text.update()
 
         self.sprites.add(self.text, layer=self.sprites.get_top_layer()+1)
         self.sprites.add(self.mouse, layer=self.sprites.get_top_layer()+1)
@@ -139,12 +144,12 @@ class Game(object):
                 self.message.set_message('looser')
                 self.sprites.add(self.message)
 
+                
         if self.mycard != None:
             if self.mycard.number == config.n:
                 tmp = self.mycard
                 self.mycard.kill()
                 self.mycard = None
-                print 'sonaste'
                 self.mouse.set_image()
                 self.bad_card(tmp)
             
@@ -161,37 +166,47 @@ class Game(object):
             elif event.type == KEYUP:
                 pass
             elif event.type == KEYDOWN:
-                if event.key == K_t:
-                    self.text.visible = not self.text.visible
-                if event.key == K_f:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+                #if event.key == K_x:
+                #    self.xray_mode = not self.xray_mode
+                #if event.key == K_w:
+                #    x, y = self.mouse.get_pos()
+                #    for card in self.table.sprites():
+                #        if pygame.Rect(card.rect).collidepoint(x,y):
+                #            print card.number, card.suit
+
+                if event.key == K_g:
+                    self.message.set_message('looser')
+                    self.sprites.add(self.message)
+                if event.key == K_w:
+                    self.message.set_message('winner')
                     self.sprites.add(self.message)
                 if event.key == K_r or event.key == K_SPACE:
                     self.mouse.set_image()
                     self.init()
-                if event.key == K_RETURN:
-                    for card in self.table.sprites():
-                        card.flip()
-                if event.key == K_x:
-                    self.xray_mode = not self.xray_mode
-                if event.key == K_w:
-                    x, y = self.mouse.get_pos()
-                    for card in self.table.sprites():
-                        if pygame.Rect(card.rect).collidepoint(x,y):
-                            print card.number, card.suit
- 
+                 
         self.on_mouse_motion()
         self.text.update()
         self.draw()
 
     def on_mouse_motion(self):
-        if self.xray_mode:
-            x, y = self.mouse.get_pos()
-            for card in self.table.sprites():
-                        if pygame.Rect(card.rect).collidepoint(x,y):
-                            self.text.msg = 'X-ray mode: {0}{1}'.format(card.number, card.suit)
+        pass
+        #if self.xray_mode:
+        #    x, y = self.mouse.get_pos()
+        #    for card in self.table.sprites():
+        #                if pygame.Rect(card.rect).collidepoint(x,y):
+        #                    self.text.msg = 'X-ray mode: {0}{1}'.format(card.number, card.suit)
         
     def on_mouse_button_down(self):
         x, y = self.mouse.get_pos()
+
+        if self.looser:
+            for card in self.table.sprites():
+                if pygame.Rect(card.rect).collidepoint(x,y):
+                    card.flip()
+
         if self.mycard != None:
             for r in self.cols[self.mycard.number]:
                 if r.collidepoint(x,y):
@@ -290,16 +305,22 @@ class Message(pygame.sprite.DirtySprite):
             'looser': pygame.image.load(config.path+'looser.png').convert_alpha(),
             'winner': pygame.image.load(config.path+'winner.png').convert_alpha()
         }
-        self.set_message()
+        self.set_message('looser')
     def set_position(self, x, y):
         self.rect.x = x
         self.rect.y = y
-    def set_message(self, message='looser'):
+    def set_message(self, message):
+        self.message = message
         self.image = self.images[message]
         self.rect = self.image.get_rect()
-        self.rect.x = (config.w-self.rect.w)/2
-        self.rect.y = (config.h-self.rect.h)/2
         self.dirty = 2
+        if message == 'looser':
+            posx = (config.w-(config.n-1)*config.card_w)/2
+            self.rect.x = posx
+            self.rect.y = 2*posx+4*config.card_h
+        else:
+            self.rect.x = (config.w-self.rect.w)/2
+            self.rect.y = (config.h-self.rect.h)/2
 
 class Card(pygame.sprite.DirtySprite):
     def __init__(self, number, suit, filename):
@@ -336,17 +357,14 @@ class Card(pygame.sprite.DirtySprite):
 if __name__ == '__main__':
 
     if '-h' in sys.argv:
-        print 'PySolita, version 0'
+        print 'PySolita, version 0.9'
         print 'Usage: game.py <video_mode>, where <video_mode> is:'
-        print '     -a   for 640x480'
-        print '     -b   for 800x600 (default)'
-        print '     -c   for 1024x768'
+        print '     -a   for 800x600 (default)'
+        print '     -b   for 1024x768'
         sys.exit(0)
 
     config.init((800, 600))
-    if '-a' in sys.argv:
-            config.init((640, 480))
-    if '-c' in sys.argv:
+    if '-b' in sys.argv:
             config.init((1024, 768))
     
     game = Game()
