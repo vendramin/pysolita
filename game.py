@@ -176,13 +176,12 @@ class Game(object):
                 #    for card in self.table.sprites():
                 #        if pygame.Rect(card.rect).collidepoint(x,y):
                 #            print card.number, card.suit
-
-                if event.key == K_g:
-                    self.message.set_message('looser')
-                    self.sprites.add(self.message)
-                if event.key == K_w:
-                    self.message.set_message('winner')
-                    self.sprites.add(self.message)
+                #if event.key == K_g:
+                #    self.message.set_message('looser')
+                #    self.sprites.add(self.message)
+                #if event.key == K_w:
+                #    self.message.set_message('winner')
+                #    self.sprites.add(self.message)
                 if event.key == K_r or event.key == K_SPACE:
                     self.mouse.set_image()
                     self.init()
