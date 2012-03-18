@@ -211,10 +211,10 @@ class Game(object):
                 if r.collidepoint(x,y):
                     for card in self.table.sprites():
                         if pygame.Rect(card.rect).collidepoint(x,y):
-                            for n, r in self.table.lines.items():
+                            for n, r in list(self.table.lines.items()):
                                 if r.collidepoint(x,y):
-                                    if not n in self.table.suits.keys():
-                                        if not self.mycard.suit in self.table.suits.values():
+                                    if not n in list(self.table.suits.keys()):
+                                        if not self.mycard.suit in list(self.table.suits.values()):
                                             self.table.suits[n] = self.mycard.suit
                                         else:
                                             return
@@ -275,7 +275,7 @@ class Table():
     def add(self, card):
         self.cards.add(card)
     def get_lines(self):
-        return self.lines.values()
+        return list(self.lines.values())
     def suit_of_line(self, n):
         return 
     def sprites(self):
@@ -356,15 +356,15 @@ class Card(pygame.sprite.DirtySprite):
 if __name__ == '__main__':
 
     if '-h' in sys.argv:
-        print 'PySolita, version 0.9'
-        print 'Usage: game.py <video_mode>, where <video_mode> is:'
-        print '     -a   for 800x600 (default)'
-        print '     -b   for 1024x768'
+        print('PySolita, version 0.9')
+        print('Usage: game.py <video_mode>, where <video_mode> is:')
+        print('     -a   for 800x600')
+        print('     -b   for 1024x768 (default)')
         sys.exit(0)
 
-    config.init((800, 600))
-    if '-b' in sys.argv:
-            config.init((1024, 768))
+    config.init((1024, 768))
+    if '-a' in sys.argv:
+            config.init((800, 600))
     
     game = Game()
     game.init()
